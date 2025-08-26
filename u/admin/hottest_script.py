@@ -1,5 +1,5 @@
-import pandas
-import requests
+# import pandas
+# import requests
 
 def rev():
     return "rev3"
