@@ -1,0 +1,4 @@
+module mymod
+
+go 1.24.5
+//go.sum
