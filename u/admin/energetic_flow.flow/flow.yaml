@@ -1,0 +1,33 @@
+summary: ''
+description: ''
+value:
+  modules:
+    - id: a
+      value:
+        type: rawscript
+        content: '!inline inline_script_0.inline_script.deno.ts'
+        input_transforms:
+          x:
+            type: javascript
+            expr: '`${flow_input.a}`'
+        assets: []
+        lock: ''
+        language: deno
+      continue_on_error: false
+      skip_if:
+        expr: 'false'
+      stop_after_if:
+        error_message: null
+        expr: result == undefined
+        skip_if_stopped: false
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  order:
+    - a
+  properties:
+    a:
+      type: string
+      description: ''
+      default: ''
+  required: []

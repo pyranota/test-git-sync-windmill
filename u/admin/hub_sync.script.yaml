@@ -1,0 +1,11 @@
+summary: Synchronize Hub Resource types with instance
+description: >-
+  Sync latest resource types from hub to share to every workspace. Recommended
+  to run at least once. On a schedule by default.
+lock: '!inline u/admin/hub_sync.script.lock'
+kind: script
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties: {}
+  required: []
