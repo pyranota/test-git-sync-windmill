@@ -1,4 +1,4 @@
-//
+
 package inner
 
 import (
@@ -21,3 +21,4 @@ func main(x string, nested struct {
 	// v, _ := wmill.GetVariable("f/examples/secret")
 	return x, nil
 }
+
