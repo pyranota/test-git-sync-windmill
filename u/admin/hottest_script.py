@@ -1,9 +1,9 @@
 # import pandas
-# import requests
+import requests
 
 
 def rev():
-    return "rev3"
+    return "rev4"
 
 def main():
     pass
