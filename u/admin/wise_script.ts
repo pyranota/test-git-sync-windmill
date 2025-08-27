@@ -8,6 +8,7 @@ import * as wmill from "windmill-client"
 // type Postgresql = object
 
 export async function rev() {
+  console.log(wmill)
   return "rev1";
 }
 
