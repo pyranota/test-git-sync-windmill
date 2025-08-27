@@ -1,5 +1,5 @@
-import pandas
-import rich
+# import pandas
+import requests
 
 
 def rev():
