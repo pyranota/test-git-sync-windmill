@@ -1,4 +1,4 @@
-summary: ''
+summary: child
 description: ''
 lock: '!inline u/admin/wise_script.script.lock'
 kind: script
