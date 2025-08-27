@@ -9,7 +9,7 @@ import * as wmill from "windmill-client"
 
 export async function rev() {
   console.log(wmill)
-  return "rev1";
+  return "rev2";
 }
 
 export async function main() {
