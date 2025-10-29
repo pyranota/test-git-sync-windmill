@@ -52,7 +52,7 @@ export async function main(
   group_by_folder = false
 ) {
   console.log(paths)
-  commit_msg = commit_msg.replace("$paths", "" + (paths ?? []).map(p => p + "**"))
+  commit_msg = commit_msg.replace("$paths", "" + (paths ?? []).map(p => p + " "))
 
 
   let safeDirectoryPath: string | undefined;
