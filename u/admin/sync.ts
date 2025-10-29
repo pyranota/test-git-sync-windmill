@@ -1,3 +1,5 @@
+//nobundling
+
 import * as wmillclient from "windmill-client";
 import wmill from "windmill-cli";
 import { basename } from "node:path";
@@ -42,7 +44,7 @@ export async function main(
   repo_url_resource_path: string,
   path_type: PathType,
   skip_secret = true,
-  path: string | undefined,
+  paths: string[] | undefined,
   parent_path: string | undefined,
   commit_msg: string,
   parent_workspace_id?: string,
@@ -54,7 +56,7 @@ export async function main(
   const cwd = process.cwd();
   process.env["HOME"] = ".";
   console.log(
-    `Syncing ${path_type} ${path ?? ""} with parent ${parent_path ?? ""}`
+    `Syncing ${path_type} ${paths ?? ""} with parent ${parent_path ?? ""}`
   );
 
   if (repo_resource.is_github_app) {
@@ -82,29 +84,29 @@ export async function main(
     }
   }
 
-  if (parent_workspace_id && parent_workspace_id.startsWith(FORKED_WORKSPACE_PREFIX)) {
-    const parentBranch = get_fork_branch_name(parent_workspace_id, clonedBranchName);
-    console.log(`This workspace's parent is also a fork, moving to branch ${parentBranch} in case a new branch needs to be created with the appropriate root`);
-    await move_to_git_branch(
-      parent_workspace_id,
-      path_type,
-      path,
-      parent_path,
-      use_individual_branch,
-      group_by_folder,
-      clonedBranchName
-    );
-  }
+  // if (parent_workspace_id && parent_workspace_id.startsWith(FORKED_WORKSPACE_PREFIX)) {
+  //   const parentBranch = get_fork_branch_name(parent_workspace_id, clonedBranchName);
+  //   console.log(`This workspace's parent is also a fork, moving to branch ${parentBranch} in case a new branch needs to be created with the appropriate root`);
+  //   await move_to_git_branch(
+  //     parent_workspace_id,
+  //     path_type,
+  //     path,
+  //     parent_path,
+  //     use_individual_branch,
+  //     group_by_folder,
+  //     clonedBranchName
+  //   );
+  // }
 
-  await move_to_git_branch(
-    workspace_id,
-    path_type,
-    path,
-    parent_path,
-    use_individual_branch,
-    group_by_folder,
-    clonedBranchName
-  );
+  // await move_to_git_branch(
+  //   workspace_id,
+  //   path_type,
+  //   path,
+  //   parent_path,
+  //   use_individual_branch,
+  //   group_by_folder,
+  //   clonedBranchName
+  // );
   const subfolder = repo_resource.folder ?? "";
   const branch_or_default = repo_resource.branch ?? "<DEFAULT>";
   console.log(
@@ -113,7 +115,7 @@ export async function main(
   await wmill_sync_pull(
     path_type,
     workspace_id,
-    path,
+    paths,
     parent_path,
     skip_secret,
     repo_url_resource_path,
@@ -121,7 +123,7 @@ export async function main(
     repo_resource.branch
   );
   try {
-    await git_push(path, parent_path, commit_msg, repo_resource);
+    await git_push(paths, parent_path, commit_msg, repo_resource);
   } catch (e) {
     throw e;
   } finally {
@@ -240,12 +242,12 @@ async function move_to_git_branch(
     }
     branchName = group_by_folder
       ? `wm_deploy/${workspace_id}/${(path ?? parent_path)
-          ?.split("/")
-          .slice(0, 2)
-          .join("__")}`
+        ?.split("/")
+        .slice(0, 2)
+        .join("__")}`
       : `wm_deploy/${workspace_id}/${path_type}/${(
-          path ?? parent_path
-        )?.replaceAll("/", "__")}`;
+        path ?? parent_path
+      )?.replaceAll("/", "__")}`;
   }
 
   try {
@@ -275,7 +277,7 @@ async function move_to_git_branch(
   console.log(`Successfully switched to branch ${branchName}`);
 }
 async function git_push(
-  path: string | undefined,
+  paths: string[] | undefined,
   parent_path: string | undefined,
   commit_msg: string,
   repo_resource: any
@@ -298,14 +300,15 @@ async function git_push(
     await sh_run(undefined, "git", "config", "user.email", user_email);
     await sh_run(undefined, "git", "config", "user.name", user_name);
   }
-
-  if (path !== undefined && path !== null && path !== "") {
+  const matching_paths = (paths ?? []).map(p => p + "**");
+  if (paths !== undefined && paths !== null && paths.length > 0) {
     try {
-      await sh_run(undefined, "git", "add", "wmill-lock.yaml", `${path}**`);
+      await sh_run(undefined, "git", "add", "wmill-lock.yaml", ...matching_paths);
     } catch (e) {
-      console.log(`Unable to stage files matching ${path}**, ${e}`);
+      console.log(`Unable to stage files matching ${matching_paths}, ${e}`);
     }
   }
+
   if (parent_path !== undefined && parent_path !== null && parent_path !== "") {
     try {
       await sh_run(
@@ -432,7 +435,7 @@ function regexFromPath(path_type: PathType, path: string) {
 async function wmill_sync_pull(
   path_type: PathType,
   workspace_id: string,
-  path: string | undefined,
+  paths: string[] | undefined,
   parent_path: string | undefined,
   skip_secret: boolean,
   repo_url_resource_path: string,
@@ -440,12 +443,15 @@ async function wmill_sync_pull(
   original_branch?: string
 ) {
   const includes = [];
-  if (path !== undefined && path !== null && path !== "") {
+
+  for (const path of paths ?? []) {
     includes.push(regexFromPath(path_type, path));
   }
+
   if (parent_path !== undefined && parent_path !== null && parent_path !== "") {
     includes.push(regexFromPath(path_type, parent_path));
   }
+
   await wmill_run(
     6,
     "workspace",
