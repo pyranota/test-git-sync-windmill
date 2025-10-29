@@ -52,6 +52,9 @@ export async function main(
   group_by_folder = false
 ) {
   console.log(paths)
+  commit_msg = commit_msg.replace("$paths", "" + (paths ?? []).map(p => p + "**"))
+
+
   let safeDirectoryPath: string | undefined;
   const repo_resource = await wmillclient.getResource(repo_url_resource_path);
   const cwd = process.cwd();
