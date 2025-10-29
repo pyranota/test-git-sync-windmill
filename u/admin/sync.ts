@@ -51,6 +51,7 @@ export async function main(
   use_individual_branch = false,
   group_by_folder = false
 ) {
+  console.log(paths)
   let safeDirectoryPath: string | undefined;
   const repo_resource = await wmillclient.getResource(repo_url_resource_path);
   const cwd = process.cwd();
