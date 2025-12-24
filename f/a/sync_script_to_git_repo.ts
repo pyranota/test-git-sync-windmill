@@ -35,30 +35,37 @@ type PathType =
   | "gcptrigger"
   | "emailtrigger";
 
+type SyncItem = {
+  workspace_id: string;
+  path_type: PathType;
+  path: string | undefined;
+  parent_path: string | undefined;
+  commit_msg: string;
+  parent_workspace_id?: string;
+};
+
 let gpgFingerprint: string | undefined = undefined;
 
 export async function main(
-  workspace_id: string,
+  items: SyncItem[],
   repo_url_resource_path: string,
-  path_type: PathType,
-  skip_secret = true,
-  path: string | undefined,
-  parent_path: string | undefined,
-  commit_msg: string,
-  parent_workspace_id?: string,
-  use_individual_branch = false,
-  group_by_folder = false,
+  skip_secret: boolean = true,
+  use_individual_branch: boolean = false,
+  group_by_folder: boolean = false,
   only_create_branch: boolean = false
 ) {
+  const initialUseIndividualBranch = use_individual_branch;
+  const initialGroupByFolder = group_by_folder;
+
+  if (items.length === 0) {
+    console.log("No items to sync");
+    return;
+  }
+
   let safeDirectoryPath: string | undefined;
   const repo_resource = await wmillclient.getResource(repo_url_resource_path);
   const cwd = process.cwd();
   process.env["HOME"] = ".";
-  if (!only_create_branch) {
-    console.log(
-      `Syncing ${path_type} ${path ?? ""} with parent ${parent_path ?? ""}`
-    );
-  }
 
   if (repo_resource.is_github_app) {
     const token = await get_gh_app_token();
@@ -66,49 +73,12 @@ export async function main(
     repo_resource.url = authRepoUrl;
   }
 
-  const { repo_name, safeDirectoryPath: cloneSafeDirectoryPath, clonedBranchName } = await git_clone(cwd, repo_resource, use_individual_branch || workspace_id.startsWith(FORKED_WORKSPACE_PREFIX));
+  // Check if any item requires no_single_branch for cloning
+  const anyForkedWorkspace = items.some(item => item.workspace_id.startsWith(FORKED_WORKSPACE_PREFIX));
+  const no_single_branch = initialUseIndividualBranch || anyForkedWorkspace;
+
+  const { repo_name, safeDirectoryPath: cloneSafeDirectoryPath, clonedBranchName } = await git_clone(cwd, repo_resource, no_single_branch);
   safeDirectoryPath = cloneSafeDirectoryPath;
-
-
-  // Since we don't modify the resource on the forked workspaces, we have to cosnider the case of
-  // a fork of a fork workspace. In that case, the original branch is not stored in the resource
-  // settings, but we need to infer it from the workspace id
-
-  if (workspace_id.startsWith(FORKED_WORKSPACE_PREFIX)) {
-    if (use_individual_branch) {
-      console.log("Cannot have `use_individual_branch` in a forked workspace, disabling option`");
-      use_individual_branch = false;
-    }
-    if (group_by_folder) {
-      console.log("Cannot have `group_by_folder` in a forked workspace, disabling option`");
-      group_by_folder = false;
-    }
-  }
-
-  if (parent_workspace_id && parent_workspace_id.startsWith(FORKED_WORKSPACE_PREFIX)) {
-    const parentBranch = get_fork_branch_name(parent_workspace_id, clonedBranchName);
-    console.log(`This workspace's parent is also a fork, moving to branch ${parentBranch} in case a new branch needs to be created with the appropriate root`);
-    await move_to_git_branch(
-      parent_workspace_id,
-      path_type,
-      path,
-      parent_path,
-      use_individual_branch,
-      group_by_folder,
-      clonedBranchName
-    );
-  }
-
-  await move_to_git_branch(
-    workspace_id,
-    path_type,
-    path,
-    parent_path,
-    use_individual_branch,
-    group_by_folder,
-    clonedBranchName
-  );
-
 
   const subfolder = repo_resource.folder ?? "";
   const branch_or_default = repo_resource.branch ?? "<DEFAULT>";
@@ -116,23 +86,87 @@ export async function main(
     `Pushing to repository ${repo_name} in subfolder ${subfolder} on branch ${branch_or_default}`
   );
 
-  // If we want to just create the branch, we can skip pulling the changes.
-  if (!only_create_branch) {
-    await wmill_sync_pull(
-      path_type,
-      workspace_id,
-      path,
-      parent_path,
-      skip_secret,
-      repo_url_resource_path,
-      use_individual_branch,
-      repo_resource.branch
-    );
-  }
+  // Group items by their target branch
+  const branchGroups = groupItemsByBranch(items, initialUseIndividualBranch, initialGroupByFolder, clonedBranchName);
+
   try {
-    await git_push(path, parent_path, commit_msg, repo_resource, only_create_branch);
-  } catch (e) {
-    throw e;
+    for (const [branchKey, groupItems] of branchGroups.entries()) {
+      const firstItem = groupItems[0];
+      let currentUseIndividualBranch = initialUseIndividualBranch;
+      let currentGroupByFolder = initialGroupByFolder;
+
+      // Handle forked workspace restrictions
+      if (firstItem.workspace_id.startsWith(FORKED_WORKSPACE_PREFIX)) {
+        if (currentUseIndividualBranch) {
+          console.log("Cannot have `use_individual_branch` in a forked workspace, disabling option");
+          currentUseIndividualBranch = false;
+        }
+        if (currentGroupByFolder) {
+          console.log("Cannot have `group_by_folder` in a forked workspace, disabling option");
+          currentGroupByFolder = false;
+        }
+      }
+
+      // Handle parent workspace fork branch setup
+      if (firstItem.parent_workspace_id && firstItem.parent_workspace_id.startsWith(FORKED_WORKSPACE_PREFIX)) {
+        const parentBranch = get_fork_branch_name(firstItem.parent_workspace_id, clonedBranchName);
+        console.log(`This workspace's parent is also a fork, moving to branch ${parentBranch} in case a new branch needs to be created with the appropriate root`);
+        await move_to_git_branch(
+          firstItem.parent_workspace_id,
+          firstItem.path_type,
+          firstItem.path,
+          firstItem.parent_path,
+          currentUseIndividualBranch,
+          currentGroupByFolder,
+          clonedBranchName
+        );
+      }
+
+      // Move to the target branch for this group
+      await move_to_git_branch(
+        firstItem.workspace_id,
+        firstItem.path_type,
+        firstItem.path,
+        firstItem.parent_path,
+        currentUseIndividualBranch,
+        currentGroupByFolder,
+        clonedBranchName
+      );
+
+      console.log(`\n--- Processing branch group: ${branchKey} with ${groupItems.length} item(s) ---`);
+
+      if (!only_create_branch) {
+        // Pull all items in this group together
+        await wmill_sync_pull_batch(
+          groupItems,
+          firstItem.workspace_id,
+          skip_secret,
+          repo_url_resource_path,
+          currentUseIndividualBranch,
+          repo_resource.branch
+        );
+      }
+
+      // Collect all paths and commit messages for this group
+      const allPaths: string[] = [];
+      const commitMessages: string[] = [];
+
+      for (const item of groupItems) {
+        if (!only_create_branch) {
+          console.log(`Syncing ${item.path_type} ${item.path ?? ""} with parent ${item.parent_path ?? ""}`);
+        }
+        if (item.path) allPaths.push(item.path);
+        if (item.parent_path) allPaths.push(item.parent_path);
+        if (item.commit_msg) commitMessages.push(item.commit_msg);
+      }
+
+      // Single git push for the entire group
+      const combinedCommitMsg = commitMessages.length > 0
+        ? commitMessages.join("; ")
+        : "no commit msg";
+
+      await git_push_batch(allPaths, combinedCommitMsg, repo_resource, only_create_branch);
+    }
   } finally {
     await delete_pgp_keys();
     // Cleanup: remove safe.directory config
@@ -144,8 +178,56 @@ export async function main(
       }
     }
   }
-  console.log("Finished syncing");
+
+  console.log("Finished syncing all items");
   process.chdir(`${cwd}`);
+}
+
+function computeBranchKey(
+  item: SyncItem,
+  use_individual_branch: boolean,
+  group_by_folder: boolean,
+  originalBranchName: string
+): string {
+  const { workspace_id, path_type, path, parent_path } = item;
+
+  if (workspace_id.startsWith(FORKED_WORKSPACE_PREFIX)) {
+    return get_fork_branch_name(workspace_id, originalBranchName);
+  }
+
+  if (!use_individual_branch || path_type === "user" || path_type === "group") {
+    return `default:${workspace_id}`;
+  }
+
+  if (group_by_folder) {
+    return `wm_deploy/${workspace_id}/${(path ?? parent_path)
+      ?.split("/")
+      .slice(0, 2)
+      .join("__")}`;
+  }
+
+  return `wm_deploy/${workspace_id}/${path_type}/${(
+    path ?? parent_path
+  )?.replaceAll("/", "__")}`;
+}
+
+function groupItemsByBranch(
+  items: SyncItem[],
+  use_individual_branch: boolean,
+  group_by_folder: boolean,
+  clonedBranchName: string
+): Map<string, SyncItem[]> {
+  const groups = new Map<string, SyncItem[]>();
+
+  for (const item of items) {
+    const branchKey = computeBranchKey(item, use_individual_branch, group_by_folder, clonedBranchName);
+    if (!groups.has(branchKey)) {
+      groups.set(branchKey, []);
+    }
+    groups.get(branchKey)!.push(item);
+  }
+
+  return groups;
 }
 
 function get_fork_branch_name(w_id: string, originalBranch: string): string {
@@ -231,6 +313,7 @@ async function git_clone(
     throw err;
   }
 }
+
 async function move_to_git_branch(
   workspace_id: string,
   path_type: PathType,
@@ -283,9 +366,9 @@ async function move_to_git_branch(
   }
   console.log(`Successfully switched to branch ${branchName}`);
 }
-async function git_push(
-  path: string | undefined,
-  parent_path: string | undefined,
+
+async function git_push_batch(
+  paths: string[],
   commit_msg: string,
   repo_resource: any,
   only_create_branch: boolean,
@@ -308,30 +391,23 @@ async function git_push(
     await sh_run(undefined, "git", "config", "user.email", user_email);
     await sh_run(undefined, "git", "config", "user.name", user_name);
   }
+
   if (only_create_branch) {
     await sh_run(undefined, "git", "push", "--porcelain");
+    return;
   }
 
-  if (path !== undefined && path !== null && path !== "") {
-    try {
-      await sh_run(undefined, "git", "add", "wmill-lock.yaml", `${path}**`);
-    } catch (e) {
-      console.log(`Unable to stage files matching ${path}**, ${e}`);
+  // Stage all paths
+  for (const path of paths) {
+    if (path !== undefined && path !== null && path !== "") {
+      try {
+        await sh_run(undefined, "git", "add", "wmill-lock.yaml", `${path}**`);
+      } catch (e) {
+        console.log(`Unable to stage files matching ${path}**, ${e}`);
+      }
     }
   }
-  if (parent_path !== undefined && parent_path !== null && parent_path !== "") {
-    try {
-      await sh_run(
-        undefined,
-        "git",
-        "add",
-        "wmill-lock.yaml",
-        `${parent_path}**`
-      );
-    } catch (e) {
-      console.log(`Unable to stage files matching ${parent_path}, ${e}`);
-    }
-  }
+
   try {
     await sh_run(undefined, "git", "diff", "--cached", "--quiet");
   } catch {
@@ -357,6 +433,7 @@ async function git_push(
   }
   console.log("No changes detected, nothing to commit. Returning...");
 }
+
 async function sh_run(
   secret_position: number | undefined,
   cmd: string,
@@ -442,22 +519,26 @@ function regexFromPath(path_type: PathType, path: string) {
   }
 }
 
-async function wmill_sync_pull(
-  path_type: PathType,
+async function wmill_sync_pull_batch(
+  items: SyncItem[],
   workspace_id: string,
-  path: string | undefined,
-  parent_path: string | undefined,
   skip_secret: boolean,
   repo_url_resource_path: string,
   use_individual_branch: boolean,
   original_branch?: string
 ) {
-  const includes = [];
-  if (path !== undefined && path !== null && path !== "") {
-    includes.push(regexFromPath(path_type, path));
-  }
-  if (parent_path !== undefined && parent_path !== null && parent_path !== "") {
-    includes.push(regexFromPath(path_type, parent_path));
+  // Collect all includes from all items
+  const includes: string[] = [];
+  const pathTypes = new Set<PathType>();
+
+  for (const item of items) {
+    pathTypes.add(item.path_type);
+    if (item.path !== undefined && item.path !== null && item.path !== "") {
+      includes.push(regexFromPath(item.path_type, item.path));
+    }
+    if (item.parent_path !== undefined && item.parent_path !== null && item.parent_path !== "") {
+      includes.push(regexFromPath(item.path_type, item.parent_path));
+    }
   }
 
   console.log("Pulling workspace into git repo");
@@ -477,28 +558,31 @@ async function wmill_sync_pull(
     skip_secret ? "--skip-secrets" : "",
   ];
 
-  if (path_type === "schedule" && !use_individual_branch) {
+  // Add flags based on all path types in the batch
+  if (pathTypes.has("schedule") && !use_individual_branch) {
     args.push("--include-schedules");
   }
 
-  if (path_type === "group" && !use_individual_branch) {
+  if (pathTypes.has("group") && !use_individual_branch) {
     args.push("--include-groups");
   }
 
-  if (path_type === "user" && !use_individual_branch) {
+  if (pathTypes.has("user") && !use_individual_branch) {
     args.push("--include-users");
   }
 
-  if (path_type.includes("trigger") && !use_individual_branch) {
+  const hasTrigger = Array.from(pathTypes).some(pt => pt.includes("trigger"));
+  if (hasTrigger && !use_individual_branch) {
     args.push("--include-triggers");
   }
+
   // Only include settings when specifically deploying settings
-  if (path_type === "settings" && !use_individual_branch) {
+  if (pathTypes.has("settings" as PathType) && !use_individual_branch) {
     args.push("--include-settings");
   }
 
   // Only include key when specifically deploying keys
-  if (path_type === "key" && !use_individual_branch) {
+  if (pathTypes.has("key" as PathType) && !use_individual_branch) {
     args.push("--include-key");
   }
 
