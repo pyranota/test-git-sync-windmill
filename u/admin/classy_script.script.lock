@@ -1,7 +1,5 @@
 # py: 3.12
-numpy==2.4.0
-pandas==2.3.3
-python-dateutil==2.9.0.post0
-pytz==2025.2
-six==1.17.0
-tzdata==2025.3
+markdown-it-py==4.0.0
+mdurl==0.1.2
+pygments==2.19.2
+rich==14.2.0
