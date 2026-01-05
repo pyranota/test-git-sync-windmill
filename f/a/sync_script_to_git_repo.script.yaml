@@ -18,7 +18,7 @@ schema:
       type: array
       description: ''
       default: null
-      format: resource-sync_item
+      format: resource-sync_object
       items:
         type: object
         properties:
@@ -27,10 +27,6 @@ schema:
             description: ''
             originalType: string
           parent_path:
-            type: string
-            description: ''
-            originalType: string
-          parent_workspace_id:
             type: string
             description: ''
             originalType: string
@@ -62,15 +58,16 @@ schema:
               - gcptrigger
               - emailtrigger
             originalType: enum
-          workspace_id:
-            type: string
-            description: ''
-            originalType: string
       originalType: 'record[]'
     only_create_branch:
       type: boolean
       description: ''
       default: false
+    parent_workspace_id:
+      type: string
+      description: ''
+      default: null
+      originalType: string
     repo_url_resource_path:
       type: string
       description: ''
@@ -84,6 +81,12 @@ schema:
       type: boolean
       description: ''
       default: false
+    workspace_id:
+      type: string
+      description: ''
+      default: null
+      originalType: string
   required:
     - items
+    - workspace_id
     - repo_url_resource_path
