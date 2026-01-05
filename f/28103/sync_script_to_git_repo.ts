@@ -380,13 +380,13 @@ async function git_push(
     // Always use --author to set consistent authorship
     commitArgs.push("--author", `"${user_name} <${user_email}>"`);
 
-    const commit_header = (commit_description.length == 1) ? commit_description[0] : `[WM]: Deployed ${commit_description.length} objects`;
+    const [header, description] = (commit_description.length == 1) ? [commit_description[0], ""] : [`[WM]: Deployed ${commit_description.length} objects`, commit_description.join("\n")];
 
     commitArgs.push(
       "-m",
-      `"${commit_header == undefined || commit_header == "" ? "no commit msg" : commit_header}"`,
+      `"${header == undefined || header == "" ? "no commit msg" : header}"`,
       "-m",
-      `"${commit_description.join("\n")}"`
+      `"${description}"`
     );
 
     await sh_run(undefined, ...commitArgs);
@@ -496,13 +496,6 @@ async function wmill_sync_pull(
   original_branch?: string
 ) {
   const includes = [];
-  const hasSchedule = items.some(item => item.path_type === "schedule");
-  const hasGroup = items.some(item => item.path_type === "group");
-  const hasUser = items.some(item => item.path_type === "user");
-  const hasTrigger = items.some(item => item.path_type.includes("trigger"));
-  const hasSettings = items.some(item => item.path_type === "settings");
-  const hasKey = items.some(item => item.path_type === "key");
-
   for (const item of items) {
     const { path_type, path, parent_path } = item;
     if (path !== undefined && path !== null && path !== "") {
@@ -530,28 +523,28 @@ async function wmill_sync_pull(
     skip_secret ? "--skip-secrets" : "",
   ];
 
-  if (hasSchedule && !use_individual_branch) {
+  if (items.some(item => item.path_type === "schedule") && !use_individual_branch) {
     args.push("--include-schedules");
   }
 
-  if (hasGroup && !use_individual_branch) {
+  if (items.some(item => item.path_type === "group") && !use_individual_branch) {
     args.push("--include-groups");
   }
 
-  if (hasUser && !use_individual_branch) {
+  if (items.some(item => item.path_type === "user") && !use_individual_branch) {
     args.push("--include-users");
   }
 
-  if (hasTrigger && !use_individual_branch) {
+  if (items.some(item => item.path_type.includes("trigger")) && !use_individual_branch) {
     args.push("--include-triggers");
   }
   // Only include settings when specifically deploying settings
-  if (hasSettings && !use_individual_branch) {
+  if (items.some(item => item.path_type === "settings") && !use_individual_branch) {
     args.push("--include-settings");
   }
 
   // Only include key when specifically deploying keys
-  if (hasKey && !use_individual_branch) {
+  if (items.some(item => item.path_type === "key") && !use_individual_branch) {
     args.push("--include-key");
   }
 
