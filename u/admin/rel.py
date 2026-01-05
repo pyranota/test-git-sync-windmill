@@ -1,7 +1,7 @@
 # import os
 # import wmill
 # import pandas
-import rich
+# import rich
 
 def main():
     pass
