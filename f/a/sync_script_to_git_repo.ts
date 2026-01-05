@@ -348,7 +348,7 @@ async function git_push(
     // Always use --author to set consistent authorship
     commitArgs.push("--author", `"${user_name} <${user_email}>"`);
 
-    const commit_header = (commit_description.length == 1) ? commit_description[0] : "Sync multiple objects";
+    const commit_header = (commit_description.length == 1) ? commit_description[0] : `[WM]: Deploy ${commit_description.length} objects`;
 
     commitArgs.push(
       "-m",
