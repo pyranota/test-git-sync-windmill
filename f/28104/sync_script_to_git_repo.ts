@@ -337,17 +337,17 @@ function composeCommitHeader(items: SyncObject[]): string {
       // Pluralize the path type if count > 1
       const label = count > 1 ? `${pathType}s` : pathType;
 
-      // if (i == 2 && sortedTypes.length == 3) {
-      // parts.push(`and ${count} ${label}`);
-      // } else {
-      parts.push(`${count} ${label}`);
-      // }
+      if (i == 2 && sortedTypes.length == 3) {
+        parts.push(`and ${count} ${label}`);
+      } else {
+        parts.push(`${count} ${label}, `);
+      }
     } else {
       othersCount += count;
     }
   }
 
-  let header = `[WM]:  ${parts.join(",")}`;
+  let header = `[WM]:  ${parts.join("")}`;
   if (othersCount > 0) {
     header += ` and ${othersCount} other object${othersCount > 1 ? "s" : ""}`;
   }
