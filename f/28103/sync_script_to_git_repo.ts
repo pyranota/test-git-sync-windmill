@@ -318,6 +318,38 @@ async function git_checkout_branch(
   console.log(`Successfully switched to branch ${branchName}`);
 }
 
+function composeCommitHeader(items: SyncObject[]): string {
+  // Count occurrences of each path_type
+  const typeCounts = new Map<PathType, number>();
+  for (const item of items) {
+    typeCounts.set(item.path_type, (typeCounts.get(item.path_type) ?? 0) + 1);
+  }
+
+  // Sort by count descending to get the top 2
+  const sortedTypes = Array.from(typeCounts.entries()).sort((a, b) => b[1] - a[1]);
+
+  const parts: string[] = [];
+  let othersCount = 0;
+
+  for (let i = 0; i < sortedTypes.length; i++) {
+    const [pathType, count] = sortedTypes[i];
+    if (i < 2) {
+      // Pluralize the path type if count > 1
+      const label = count > 1 ? `${pathType}s` : pathType;
+      parts.push(`${count} ${label}`);
+    } else {
+      othersCount += count;
+    }
+  }
+
+  let header = `[WM]: Deployed ${parts.join(", ")}`;
+  if (othersCount > 0) {
+    header += ` and ${othersCount} other object${othersCount > 1 ? "s" : ""}`;
+  }
+
+  return header;
+}
+
 async function git_push(
   items: SyncObject[],
   repo_resource: any,
@@ -380,7 +412,9 @@ async function git_push(
     // Always use --author to set consistent authorship
     commitArgs.push("--author", `"${user_name} <${user_email}>"`);
 
-    const [header, description] = (commit_description.length == 1) ? [commit_description[0], ""] : [`[WM]: Deployed ${commit_description.length} objects`, commit_description.join("\n")];
+    const [header, description] = (commit_description.length == 1)
+      ? [commit_description[0], ""]
+      : [composeCommitHeader(items), commit_description.join("\n")];
 
     commitArgs.push(
       "-m",
