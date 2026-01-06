@@ -1,9 +1,35 @@
 summary: ''
 description: ''
 lock: '!inline u/admin/fearless_script.script.lock'
+concurrency_key: '$args[a]'
+concurrency_time_window_s: 0
+concurrent_limit: 1
+debounce_args_to_accumulate:
+  - a
+debounce_delay_s: 5
 kind: script
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object
-  properties: {}
-  required: []
+  properties:
+    a:
+      type: array
+      description: ''
+      default: null
+      items:
+        type: number
+      originalType: 'number[]'
+    b:
+      type: string
+      description: ''
+      default: null
+      originalType: string
+    c:
+      type: string
+      description: ''
+      default: null
+      originalType: string
+  required:
+    - a
+    - b
+    - c

@@ -2,5 +2,5 @@ import u.admin.rel
 
 
 
-def main():
+def main(a: list[int], b: str, c: str):
     pass
