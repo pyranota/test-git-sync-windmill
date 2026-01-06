@@ -336,13 +336,18 @@ function composeCommitHeader(items: SyncObject[]): string {
     if (i < 3) {
       // Pluralize the path type if count > 1
       const label = count > 1 ? `${pathType}s` : pathType;
-      parts.push(`${count} ${label}`);
+
+      if (sortedTypes.length = 3) {
+        parts.push(`and ${count} ${label}`);
+      } else {
+        parts.push(`${count} ${label},`);
+      }
     } else {
       othersCount += count;
     }
   }
 
-  let header = `[WM]: Deployed ${parts.join(", ")}`;
+  let header = `[WM]: Deployed ${parts.join(" ")}`;
   if (othersCount > 0) {
     header += ` and ${othersCount} other object${othersCount > 1 ? "s" : ""}`;
   }
