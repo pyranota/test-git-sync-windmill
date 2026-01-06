@@ -1,0 +1,4 @@
+description: ''
+value:
+  apiKey: '$var:u/admin/vivacious_anthropic'
+resource_type: anthropic

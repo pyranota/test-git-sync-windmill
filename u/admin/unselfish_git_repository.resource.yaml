@@ -1,0 +1,9 @@
+description: >-
+  Repository https://github.com/pyranota/test-git-sync-windmill with permissions
+  fetched using Windmill Github App.
+value:
+  branch: ''
+  folder: ''
+  is_github_app: true
+  url: '$var:u/admin/unselfish_git_repository'
+resource_type: git_repository
