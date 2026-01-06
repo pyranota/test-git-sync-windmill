@@ -4,7 +4,7 @@ includes:
   - u/**
 excludes: []
 codebases: []
-skipVariables: true
+skipVariables: false
 skipResources: true
 skipResourceTypes: true
 skipSecrets: true
