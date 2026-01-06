@@ -1,0 +1,19 @@
+summary: ''
+description: ''
+value:
+  modules:
+    - id: a
+      value:
+        type: rawscript
+        content: '!inline inline_script_0.inline_script.py'
+        input_transforms:
+          x:
+            type: static
+            value: ''
+        lock: '!inline inline_script_0.inline_script.lock'
+        language: python3
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties: {}
+  required: []
