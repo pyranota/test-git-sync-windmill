@@ -1,0 +1,6 @@
+summary: ''
+display_name: folder
+extra_perms:
+  u/admin: true
+owners:
+  - u/admin
