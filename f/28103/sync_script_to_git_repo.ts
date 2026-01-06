@@ -337,7 +337,7 @@ function composeCommitHeader(items: SyncObject[]): string {
       // Pluralize the path type if count > 1
       const label = count > 1 ? `${pathType}s` : pathType;
 
-      if (sortedTypes.length == 3) {
+      if (i == 2 && sortedTypes.length == 3) {
         parts.push(`and ${count} ${label}`);
       } else {
         parts.push(`${count} ${label},`);
