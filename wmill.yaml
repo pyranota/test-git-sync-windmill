@@ -5,8 +5,8 @@ includes:
 excludes: []
 codebases: []
 skipVariables: false
-skipResources: true
-skipResourceTypes: true
+skipResources: false
+skipResourceTypes: false
 skipSecrets: true
 skipScripts: false
 skipFlows: false
