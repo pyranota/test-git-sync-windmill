@@ -352,6 +352,11 @@ function composeCommitHeader(items: SyncObject[]): string {
     header += ` and ${othersCount} other object${othersCount > 1 ? "s" : ""}`;
   }
 
+  console.log(header);
+  console.log(header);
+
+  console.log(header);
+
   return header;
 }
 
