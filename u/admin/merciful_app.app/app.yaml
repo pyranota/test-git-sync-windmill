@@ -61,6 +61,17 @@ value:
               lock: '!inline inline_script.inline_script.lock'
               language: python3
               path: u/admin/newapp/Inline_Script
+              schema:
+                $schema: 'https://json-schema.org/draft/2020-12/schema'
+                type: object
+                properties:
+                  x:
+                    type: string
+                    description: ''
+                    default: null
+                    originalType: string
+                required:
+                  - x
         configuration:
           afterIcon:
             type: static
