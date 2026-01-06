@@ -340,14 +340,14 @@ function composeCommitHeader(items: SyncObject[]): string {
       if (i == 2 && sortedTypes.length == 3) {
         parts.push(`and ${count} ${label}`);
       } else {
-        parts.push(`${count} ${label}, `);
+        parts.push(`${count} ${label}`);
       }
     } else {
       othersCount += count;
     }
   }
 
-  let header = `[WM]: Deployed ${parts.join("")}`;
+  let header = `[WM]: Deployed ${parts.join(", ")}`;
   if (othersCount > 0) {
     header += ` and ${othersCount} other object${othersCount > 1 ? "s" : ""}`;
   }

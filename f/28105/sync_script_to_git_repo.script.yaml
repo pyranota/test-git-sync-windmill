@@ -1,6 +1,6 @@
 summary: Sync script to Git repo
 description: Fork of hub/28102/windmill/sync_script_to_git_repo
-lock: '!inline f/28104/sync_script_to_git_repo.script.lock'
+lock: '!inline f/28105/sync_script_to_git_repo.script.lock'
 debounce_args_to_accumulate:
   - items
 debounce_delay_s: 5
