@@ -333,7 +333,7 @@ function composeCommitHeader(items: SyncObject[]): string {
 
   for (let i = 0; i < sortedTypes.length; i++) {
     const [pathType, count] = sortedTypes[i];
-    if (i < 2) {
+    if (i < 3) {
       // Pluralize the path type if count > 1
       const label = count > 1 ? `${pathType}s` : pathType;
       parts.push(`${count} ${label}`);
