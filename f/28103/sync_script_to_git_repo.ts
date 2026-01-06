@@ -347,7 +347,7 @@ function composeCommitHeader(items: SyncObject[]): string {
     }
   }
 
-  let header = `[WM]: Deployed ${parts.join(",")}`;
+  let header = `[WM]:  ${parts.join(",")}`;
   if (othersCount > 0) {
     header += ` and ${othersCount} other object${othersCount > 1 ? "s" : ""}`;
   }
