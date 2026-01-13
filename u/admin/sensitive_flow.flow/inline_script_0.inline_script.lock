@@ -10,4 +10,4 @@ mdurl==0.1.2
 pygments==2.19.2
 rich==14.2.0
 typing-extensions==4.15.0
-wmill==1.603.4
+wmill==1.604.0
