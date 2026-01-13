@@ -4,8 +4,6 @@ lock: '!inline u/admin/fearless_script.script.lock'
 concurrency_key: '$args[a]'
 concurrency_time_window_s: 0
 concurrent_limit: 1
-debounce_args_to_accumulate:
-  - a
 debounce_delay_s: 5
 kind: script
 schema:
