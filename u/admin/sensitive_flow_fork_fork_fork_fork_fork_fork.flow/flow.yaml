@@ -2,16 +2,221 @@ summary: ''
 description: ''
 value:
   modules:
-    - id: a
+    - id: Foxes
       value:
         type: rawscript
-        content: '!inline inline_script_0.inline_script.py'
+        content: '!inline foxes.inline_script.py'
         input_transforms:
           x:
             type: static
             value: ''
-        lock: '!inline inline_script_0.inline_script.lock'
+        assets: []
+        lock: '!inline foxes.inline_script.lock'
         language: python3
+    - id: nstep2
+      summary: ''
+      value:
+        type: branchall
+        branches:
+          - modules:
+              - id: nstep2_1
+                value:
+                  type: rawscript
+                  content: '!inline nstep2_1.inline_script.ts'
+                  input_transforms:
+                    x:
+                      type: static
+                      value: ''
+                  assets: []
+                  lock: '!inline nstep2_1.inline_script.lock'
+                  language: bun
+            expr: ''
+            parallel: true
+            skip_failure: false
+          - summary: ''
+            modules:
+              - id: like
+                value:
+                  type: rawscript
+                  content: '!inline like.inline_script.py'
+                  input_transforms:
+                    x:
+                      type: static
+                      value: ''
+                  assets: []
+                  lock: '!inline like.inline_script.lock'
+                  language: python3
+            expr: 'false'
+            parallel: true
+            skip_failure: false
+        parallel: true
+    - id: nstep3
+      summary: ''
+      value:
+        type: branchone
+        branches:
+          - summary: ''
+            modules:
+              - id: nstep3_1
+                value:
+                  type: rawscript
+                  content: '!inline nstep3_1.inline_script.py'
+                  input_transforms:
+                    x:
+                      type: static
+                      value: ''
+                  assets: []
+                  lock: '!inline nstep3_1.inline_script.lock'
+                  language: python3
+            expr: 'false'
+            parallel: true
+            skip_failure: true
+        default:
+          - id: nstep3_2
+            value:
+              type: rawscript
+              content: '!inline nstep3_2.inline_script.ts'
+              input_transforms:
+                x:
+                  type: static
+                  value: ''
+              assets: []
+              lock: '!inline nstep3_2.inline_script.lock'
+              language: bun
+    - id: nstep4
+      value:
+        type: whileloopflow
+        modules:
+          - id: nstep4_1
+            value:
+              type: rawscript
+              content: '!inline nstep4_1.inline_script.py'
+              input_transforms:
+                x:
+                  type: static
+                  value: ''
+              assets: []
+              lock: '!inline nstep4_1.inline_script.lock'
+              language: python3
+        skip_failures: false
+    - id: nstep5
+      value:
+        type: forloopflow
+        modules:
+          - id: nstep5_1
+            value:
+              type: rawscript
+              content: '!inline nstep5_1.inline_script.py'
+              input_transforms:
+                x:
+                  type: static
+                  value: ''
+              assets: []
+              lock: '!inline nstep5_1.inline_script.lock'
+              language: python3
+        iterator:
+          type: javascript
+          expr: '[''dynamic or static array'']'
+        parallel: false
+        skip_failures: true
+    - id: nstep_ai
+      value:
+        type: aiagent
+        input_transforms:
+          image:
+            type: static
+            value: null
+          max_completion_tokens:
+            type: static
+            value: null
+          output_schema:
+            type: static
+            value: null
+          output_type:
+            type: static
+            value: text
+          provider:
+            type: static
+            value:
+              kind: openai
+          system_prompt:
+            type: static
+            value: ''
+          temperature:
+            type: static
+            value: null
+          user_message:
+            type: static
+            value: ''
+        tools:
+          - id: qtool1
+            summary: tool
+            value:
+              type: rawscript
+              content: '!inline tool.inline_script.py'
+              input_transforms:
+                x:
+                  type: static
+                  value: null
+              lock: '!inline tool.inline_script.lock'
+              language: python3
+              tool_type: flowmodule
+      continue_on_error: false
+  failure_module:
+    id: failure
+    value:
+      type: rawscript
+      content: |-
+        from f.rel.leaf_2 import main as lf_2;
+
+        def check():
+            return [lf_2()];
+
+        import os
+
+        def main(message: str, name: str, step_id: str):
+            flow_id = os.environ.get("WM_ROOT_FLOW_JOB_ID")
+            print("message", message)
+            print("name", name)
+            print("step_id", step_id)
+            return { "message": message, "flow_id": flow_id, "step_id": step_id, "recover": False }
+      input_transforms:
+        name:
+          type: javascript
+          expr: error.name
+        message:
+          type: javascript
+          expr: error.message
+        step_id:
+          type: javascript
+          expr: error.step_id
+      lock: |
+        # py: 3.12
+      language: python3
+  preprocessor_module:
+    id: preprocessor
+    value:
+      type: rawscript
+      content: |
+        from f.rel.branch import main as br;
+        from f.rel.leaf_1 import main as lf_1;
+        from ..leaf_1 import main as lf_12;
+        from ...rel.leaf_2 import main as lf_2;
+
+        def check():
+            return [br(), lf_1(), lf_2(), lf_12()];
+
+        def preprocessor(event):
+            return {
+                # return the args to be passed to the runnable
+            }
+      input_transforms:
+        event:
+          type: static
+          value: null
+      lock: |
+        # py: 3.12
+      language: python3
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object

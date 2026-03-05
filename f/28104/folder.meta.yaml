@@ -1,6 +1,8 @@
 summary: ''
 display_name: '28104'
 extra_perms:
+  admin@windmill.dev: true
   u/admin: true
 owners:
   - u/admin
+  - admin@windmill.dev

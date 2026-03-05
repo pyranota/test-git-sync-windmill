@@ -1,0 +1,19 @@
+description: >-
+  A set of files that is meant to include your agent instructions, AGENTS.md,
+  CLAUDE.md and skills/foo/SKILL.md as a fileset (so path -> content). e.g:
+
+  ```
+
+  CLAUDE.md: You're a polite agent that always say hi
+
+  skills/sayhi/SKILLS.md: To say hi, say howdy!
+
+  ```
+format_extension: null
+is_fileset: false
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  order: []
+  properties: {}
+  required: []
