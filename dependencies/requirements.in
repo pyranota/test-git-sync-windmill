@@ -1,0 +1,7 @@
+# Python Requirements (requirements.in format)
+# # py: 3.11
+# ^ Uncomment to pin to python version.
+# Core dependencies
+requests>=2.31.0
+pandas>=2.0.0
+numpy>=1.24.0
