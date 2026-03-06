@@ -1,8 +1,0 @@
-summary: ''
-display_name: folder
-extra_perms:
-  admin@windmill.dev: true
-  u/admin: true
-owners:
-  - u/admin
-  - admin@windmill.dev

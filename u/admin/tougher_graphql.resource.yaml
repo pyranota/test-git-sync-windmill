@@ -1,6 +1,0 @@
-description: ''
-value:
-  base_url: ''
-  bearer_token: ''
-  custom_headers: null
-resource_type: graphql

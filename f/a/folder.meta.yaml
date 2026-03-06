@@ -1,8 +1,0 @@
-summary: null
-display_name: a
-extra_perms:
-  admin@windmill.dev: true
-  u/admin: true
-owners:
-  - admin@windmill.dev
-  - u/admin
