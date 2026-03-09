@@ -7,7 +7,6 @@ codebases: []
 skipVariables: false
 skipResources: false
 skipResourceTypes: false
-skipWorkspaceDependencies: true
 skipSecrets: true
 skipScripts: false
 skipFlows: false
