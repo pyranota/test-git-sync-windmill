@@ -12,7 +12,7 @@ skipScripts: false
 skipFlows: false
 skipApps: false
 skipFolders: false
-skipWorkspaceDependencies: true
+skipWorkspaceDependencies: false
 includeSchedules: false
 includeTriggers: false
 includeUsers: false
